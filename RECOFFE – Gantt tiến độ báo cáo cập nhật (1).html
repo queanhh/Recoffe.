@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RECOFFE | Sơ đồ Gantt tiến độ báo cáo</title>
+<style>
+:root {
+  --site-primary: #285943;
+  --site-on-primary: #ffffff;
+  --site-secondary: #e1eadf;
+  --site-on-secondary: #1b3928;
+  --site-background: #f5f6f2;
+  --site-on-background: #1b2b22;
+  --site-font-body: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --site-font-heading: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  --panel: light-dark(#ffffff, #14232b);
+  --ink: light-dark(#193746, #edfaff);
+  --muted: light-dark(#5d7c89, #b0cbd6);
+  --line: light-dark(#d2e5eb, #304b57);
+  --green: #176b83;
+  --lime: #c4e68c;
+  --blue: #658c9b;
+  --gold: #b88a3b;
+  --purple: #8b83a8;
+  --terracotta: #b97863;
+  color-scheme: light dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: light-dark(#f1f8fa,#0d171d); color: var(--ink); font: 14px/1.5 var(--site-font-body); }
+#app { min-height: 100vh; background-color: light-dark(#f2f8fa,#0d171d); color: var(--ink); border-radius: 0; }
+.hero { padding: calc(30px * var(--site-spacing-scale)) clamp(18px,4vw,54px); background: var(--site-primary); color: var(--site-on-primary); position: relative; overflow: hidden; }
+.hero:after { content:""; position:absolute; width:300px; height:300px; border:1px solid #ffffff20; border-radius:50%; right:-60px; top:-150px; box-shadow:0 0 0 35px #ffffff0a,0 0 0 70px #ffffff08; pointer-events:none; opacity:var(--site-decoration-opacity); }
+.eyebrow { font-size:11px; font-weight:800; letter-spacing:.15em; text-transform:uppercase; color:#c8f2ff; }
+h1 { font-size:calc(clamp(25px,3.4vw,40px) * var(--site-heading-scale)); line-height:1.12; max-width:1050px; margin:12px 0; }
+.hero p { max-width:950px; color:#e4f8ff; margin:0; }
+.wrap { max-width:1800px; margin:auto; padding:22px clamp(12px,3vw,38px) 40px; }
+.metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.metric,.panel { background:var(--panel); border:1px solid var(--line); border-radius:calc(15px * var(--site-radius-scale)); padding:16px; box-shadow:0 4px 18px #152a1a08; }
+.metric small,.muted { color:var(--muted); }
+.metric strong { display:block; font-size:23px; margin:5px 0; }
+.metric span { font-size:12px; color:var(--muted); }
+.toolbar { display:flex; gap:9px; align-items:center; flex-wrap:wrap; margin:20px 0 14px; }
+.toolbar input,.toolbar select,.toolbar button { background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:9px 12px; font:inherit; }
+.toolbar input { min-width:220px; flex:1; }
+.toolbar button { cursor:pointer; font-weight:700; }
+.toolbar .primary { background:var(--green); color:#fff; border-color:var(--green); }
+.section-head { display:flex; justify-content:space-between; align-items:end; gap:12px; margin:22px 0 10px; flex-wrap:wrap; }
+.section-head h2 { font-size:18px; margin:0; }
+.section-head p { font-size:12px; color:var(--muted); margin:3px 0 0; }
+.legend { display:flex; gap:11px; flex-wrap:wrap; font-size:11px; color:var(--muted); }
+.dot { width:8px; height:8px; border-radius:3px; display:inline-block; margin-right:5px; }
+.gantt-shell { border:1px solid var(--line); border-radius:15px; overflow:hidden; background:var(--panel); }
+.scroll { overflow:auto; max-height:72vh; }
+.gantt { min-width:1600px; }
+.head,.taskrow { display:grid; grid-template-columns:350px minmax(1250px,1fr); }
+.head { position:sticky; top:0; z-index:5; background:light-dark(#e3f1f5,#19313c); border-bottom:1px solid var(--line); }
+.lefthead { padding:12px 14px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; display:flex; align-items:center; }
+.timeline { display:grid; grid-template-columns:repeat(47,minmax(0,1fr)); }
+.dayhead { min-width:0; text-align:center; padding:7px 0; border-left:1px solid var(--line); color:light-dark(#3e697b,#c5eaf5); font-size:9px; }
+.dayhead.weekstart { border-left:2px solid #5c9db0; background:light-dark(#d2eaf1,#244653); }
+.dayhead .dow { display:block; font-size:8px; opacity:.8; }
+.taskrow { min-height:54px; border-bottom:1px solid var(--line); background:light-dark(#ffffff,#14232b); }
+.taskrow:nth-child(even) { background:light-dark(#f4fafc,#182a33); }
+.taskrow:last-child { border-bottom:0; }
+.taskcell { padding:9px 13px; display:flex; align-items:center; gap:10px; min-width:0; }
+.num { width:27px; height:27px; flex:0 0 27px; border-radius:8px; display:grid; place-items:center; background:light-dark(#e3f2f6,#203c48); color:var(--green); font-weight:800; font-size:10px; }
+.taskname { min-width:0; }
+.taskname strong { display:block; font-size:12px; line-height:1.35; }
+.taskname small { display:block; font-size:10px; color:var(--muted); margin-top:3px; }
+.track { position:relative; display:grid; grid-template-columns:repeat(47,minmax(0,1fr)); align-items:center; background-image:linear-gradient(to right,transparent calc(100% - 1px),light-dark(#e4ebe1,#2a382d) calc(100% - 1px)); background-size:calc(100% / 47) 100%; }
+.bar { height:24px; grid-row:1; border-radius:6px; margin:0 1px; display:flex; align-items:center; min-width:0; cursor:pointer; box-shadow:inset 0 0 0 1px #ffffff25; }
+.bar span { font-size:10px; color:white; font-weight:750; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 6px; }
+.c-plan { background:#718775; } .c-easy { background:#568394; } .c-analysis { background:#285943; } .c-finance { background:#81779f; } .c-final { background:#a8792f; } .c-digital { background:#b16f5b; }
+.group { background:light-dark(#e2f1f5,#1a3440); }
+.group strong { color:var(--green); }
+.group .track { background:none; }
+.below { display:grid; grid-template-columns:1.1fr .9fr; gap:14px; margin-top:16px; }
+.panel h3 { font-size:15px; margin:0 0 12px; }
+.milestones { display:grid; gap:12px; }
+.mile { display:grid; grid-template-columns:100px 1fr; gap:10px; }
+.date { font-size:11px; color:var(--green); font-weight:800; }
+.mile strong { font-size:12px; }
+.mile p { font-size:11px; color:var(--muted); margin:3px 0 0; }
+.pill { display:inline-block; padding:4px 8px; border-radius:7px; background:light-dark(#e3f2f6,#203c48); color:var(--green); font-size:11px; font-weight:750; }
+.note { font-size:11px; color:var(--muted); margin:14px 0 0; }
+.modal { display:none; position:fixed; inset:0; background:#08140dcc; z-index:10; align-items:center; justify-content:center; padding:18px; }
+.modal.open { display:flex; }
+.dialog { width:min(520px,100%); background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px; }
+.dialogtop { display:flex; justify-content:space-between; gap:12px; }
+.dialog h3 { font-size:20px; margin:0; }
+.dialog p { font-size:13px; }
+.dialog label { display:block; font-size:11px; color:var(--muted); margin:12px 0 5px; }
+.dialog select,.dialog textarea { width:100%; padding:9px; border:1px solid var(--line); border-radius:9px; background:var(--panel); color:var(--ink); }
+.dialog textarea { min-height:75px; }
+.actions { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+.actions button { padding:9px 12px; border:1px solid var(--line); border-radius:9px; background:var(--panel); color:var(--ink); cursor:pointer; }
+.actions .save { background:var(--green); color:white; }
+footer { padding:17px clamp(14px,3vw,38px); border-top:1px solid var(--line); font-size:11px; color:var(--muted); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+@media(max-width:760px) { .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .below { grid-template-columns:1fr; } .head,.taskrow { grid-template-columns:270px minmax(1250px,1fr); } .metric strong { font-size:20px; } }
+@media print { .toolbar,.modal { display:none!important; } .scroll { max-height:none; overflow:visible; } .hero { print-color-adjust:exact; } .wrap { padding:8px; } .taskrow { break-inside:avoid; } }
+</style>
+</head>
+<body>
+<div id="app" data-sites-preview-theme="custom">
+<header class="hero">
+  <div class="eyebrow">RECOFFE · Kế hoạch thực hiện bài báo cáo · 2026</div>
+  <h1>DỰ ÁN ĐẦU TƯ XÂY DỰNG NHÀ MÁY TÁI CHẾ BÃ CÀ PHÊ VÀ SẢN XUẤT SẢN PHẨM SINH HỌC RECOFFE</h1>
+  <p>Sơ đồ Gantt theo dõi quá trình làm báo cáo nhóm, xây dựng mô hình tài chính và hoàn thiện các sản phẩm nộp. Thời hạn cuối cùng: <b>24/10/2026</b>. Mỗi cột trên sơ đồ tương ứng một ngày lịch; thanh công việc bao gồm cả ngày bắt đầu và ngày kết thúc.</p>
+</header>
+<main class="wrap">
+  <section class="metrics">
+    <div class="metric"><span>Thời gian thực hiện</span><strong>08/09/2026–24/10/2026</strong><small>47 ngày lịch</small></div>
+    <div class="metric"><span>Hạn hoàn thành</span><strong>24/10/2026</strong><small>Hạn cuối của toàn bộ sản phẩm</small></div>
+    <div class="metric"><span>Sản phẩm đầu ra</span><strong>6 hạng mục</strong><small>Báo cáo Word, mô hình Excel, website, PowerPoint và video, Python, infographic</small></div>
+  </section>
+  <div class="toolbar">
+    <label for="filter">Nhóm việc</label>
+    <select id="filter"><option value="all">Tất cả công việc</option><option value="plan">Lập kế hoạch</option><option value="easy">Viết nội dung</option><option value="analysis">Phân tích chuyên sâu</option><option value="finance">Excel & tài chính</option><option value="digital">Sản phẩm số</option><option value="final">Hoàn thiện</option></select>
+    <input id="search" placeholder="Tìm chương, người phụ trách hoặc công việc…">
+    <button id="reset">Đặt lại</button><button id="print" class="primary">In / lưu PDF</button>
+  </div>
+  <div class="section-head"><div><h2>Tiến độ theo từng ngày</h2><p>Cuộn ngang để xem các ngày; nhấn vào thanh công việc để xem mô tả và cập nhật trạng thái. Những phần chuyên sâu được bố trí thời gian dài hơn hoặc thực hiện song song.</p></div>
+    <div class="legend"><span><i class="dot" style="background:#788a7a"></i>Kế hoạch</span><span><i class="dot" style="background:#658c9b"></i>Nội dung</span><span><i class="dot" style="background:#285943"></i>Phân tích</span><span><i class="dot" style="background:#8b83a8"></i>Tài chính</span><span><i class="dot" style="background:#b97863"></i>Sản phẩm số</span><span><i class="dot" style="background:#b88a3b"></i>Hoàn thiện</span></div>
+  </div>
+  <section class="gantt-shell"><div class="scroll"><div class="gantt" id="gantt"></div></div></section>
+  <div class="below">
+    <section class="panel"><h3>Các mốc chính</h3><div class="milestones">
+      <div class="mile"><div class="date">08/09/2026–19/09/2026</div><div><strong>Khởi động, chọn dự án và lập đề cương</strong><p>Bắt đầu môn học, thống nhất tên dự án, chốt mục lục và phân công; các chương bắt đầu làm song song từ ngày 19/09/2026.</p></div></div>
+      <div class="mile"><div class="date">19/09/2026–11/10/2026</div><div><strong>Viết các chương và mô hình Excel</strong><p>Triển khai các chương đầu; dành khoảng thời gian dài hơn cho phân tích kỹ thuật và mô hình tài chính.</p></div></div>
+      <div class="mile"><div class="date">11/10/2026–17/10/2026</div><div><strong>Hoàn thiện các chương cuối</strong><p>Hoàn thiện các phần nội dung cuối; kết quả Excel là đầu vào cho phần đánh giá hiệu quả và rủi ro.</p></div></div>
+      <div class="mile"><div class="date">15/10/2026–20/10/2026</div><div><strong>Hoàn thiện báo cáo và sản phẩm truyền thông</strong><p>Ghép Word, làm PowerPoint kèm video, infographic, phần Python và hoàn thiện website sản phẩm.</p></div></div>
+      <div class="mile"><div class="date">20/10/2026–24/10/2026</div><div><strong>Rà soát cuối và hoàn thành bài nộp</strong><p>Kiểm tra tính thống nhất của báo cáo và các tệp đi kèm; chốt toàn bộ sản phẩm trước hạn 24/10/2026.</p></div></div>
+    </div></section>
+    <section class="panel"><h3>Lưu ý về trình tự công việc</h3><div class="milestones">
+      <div class="mile"><div class="date"><span class="pill">Kỹ thuật</span></div><div><strong>Chương 3 – Kỹ thuật và công nghệ</strong><p>Phân tích công nghệ, thiết bị, quy trình, nguyên liệu và đầu ra cần thời gian nghiên cứu sâu.</p></div></div>
+      <div class="mile"><div class="date"><span class="pill">Tài chính</span></div><div><strong>Chương 7 – Mô hình tài chính Excel</strong><p>Hoàn thiện thông số, vốn đầu tư, doanh thu, chi phí, dòng tiền và chỉ tiêu hiệu quả; số liệu dùng cho chương 8 và 9.</p></div></div>
+      <div class="mile"><div class="date"><span class="pill">Sản phẩm số</span></div><div><strong>Python và infographic</strong><p>Được thêm như các đầu việc riêng, có thời hạn dự kiến để nhóm có thể chỉnh lại nếu giảng viên yêu cầu mốc khác.</p></div></div>
+      <div class="mile"><div class="date"><span class="pill">Hạn cuối</span></div><div><strong>24/10/2026</strong><p>Hạn hoàn thành toàn bộ. Công việc rà soát được gộp vào giai đoạn chốt bài, không tách thành đầu việc đối chiếu riêng.</p></div></div>
+    </div><p class="note">Mốc Python và infographic là lịch đề xuất vì chưa có ngày cụ thể được cung cấp.</p></section>
+  </div>
+  <section class="panel" style="margin-top:16px"><h3>Sản phẩm đầu ra và thời hạn cụ thể</h3><div class="milestones">
+    <div class="mile"><div class="date">26/09/2026–11/10/2026</div><div><strong>Mô hình tài chính bằng Excel</strong><p>Hoàn thiện thông số đầu vào, vốn đầu tư, doanh thu, chi phí, dòng tiền và các chỉ tiêu hiệu quả.</p></div></div>
+    <div class="mile"><div class="date">26/09/2026–11/10/2026</div><div><strong>Website giới thiệu sản phẩm RECOFFE</strong><p>Người phụ trách: Như Hiền. Hoàn thiện website giới thiệu sản phẩm và nội dung liên quan.</p></div></div>
+    <div class="mile"><div class="date">15/10/2026–19/10/2026</div><div><strong>Báo cáo Word hoàn chỉnh</strong><p>Ghép nội dung, định dạng, đồng bộ mục lục, bảng biểu, hình ảnh và tài liệu tham khảo.</p></div></div>
+    <div class="mile"><div class="date">15/10/2026–19/10/2026</div><div><strong>PowerPoint thuyết trình và video</strong><p>Chuẩn bị slide và video trình bày những nội dung chính của dự án.</p></div></div>
+    <div class="mile"><div class="date">15/10/2026–19/10/2026</div><div><strong>Phần thực hiện bằng Python</strong><p>Hoàn thành phần Python theo yêu cầu bài tập; thời gian này là mốc đề xuất.</p></div></div>
+    <div class="mile"><div class="date">17/10/2026–18/10/2026</div><div><strong>Infographic dự án RECOFFE</strong><p>Tóm tắt các thông tin chính của dự án bằng hình ảnh và bố cục trực quan; thời gian này là mốc đề xuất.</p></div></div>
+    <div class="mile"><div class="date">20/10/2026–24/10/2026</div><div><strong>Rà soát và nộp toàn bộ sản phẩm</strong><p>Kiểm tra lần cuối và hoàn thành tất cả tệp trước ngày 24/10/2026.</p></div></div>
+  </div></section>
+  <p class="note">Trạng thái và ghi chú cập nhật trong hộp công việc chỉ tồn tại trong phiên xem trước hiện tại; chưa được kết nối với hệ thống lưu trữ nhóm.</p>
+</main>
+<footer><span>RECOFFE · Sơ đồ Gantt thực hiện báo cáo</span><span>Thời hạn cuối: 24/10/2026 · Lịch theo từng ngày · Có lọc, tìm kiếm và in PDF</span></footer>
+<div class="modal" id="modal"><div class="dialog"><div class="dialogtop"><div><h3 id="dlgTitle"></h3><small id="dlgMeta" class="muted"></small></div><button id="close" aria-label="Đóng">✕</button></div><p id="dlgDesc"></p><label for="status">Trạng thái</label><select id="status"><option>Chưa bắt đầu</option><option>Đang thực hiện</option><option>Hoàn thành</option><option>Cần theo dõi</option></select><label for="notes">Ghi chú</label><textarea id="notes" placeholder="Ghi chú của nhóm…"></textarea><div class="actions"><button id="cancel">Đóng</button><button id="save" class="save">Lưu cập nhật</button></div></div></div>
+</div>
+<script>
+const tasks = [
+ {id:1,name:'Bắt đầu môn học và xác định yêu cầu bài tập',cat:'plan',start:'2026-09-08',end:'2026-09-14',owner:'Cả nhóm',desc:'Bắt đầu môn học ngày 08/09/2026, tiếp nhận yêu cầu và xác định phạm vi bài báo cáo.'},
+ {id:2,name:'Thảo luận, thống nhất tên và hướng dự án',cat:'plan',start:'2026-09-15',end:'2026-09-17',owner:'Cả nhóm',desc:'Thảo luận, thống nhất tên và định hướng dự án RECOFFE.'},
+ {id:3,name:'Lập đề cương, mục lục và phân công nhóm',cat:'plan',start:'2026-09-17',end:'2026-09-19',owner:'Cả nhóm',desc:'Chốt cấu trúc 10 chương, đề cương và phân công để bắt đầu triển khai các phần chuyên môn.'},
+ {id:4,name:'Chương 1 – Tổng quan về dự án',cat:'easy',start:'2026-09-19',end:'2026-09-22',owner:'Như Ngọc, Quế Anh',desc:'Trình bày tổng quan, mục tiêu, quy mô và căn cứ hình thành dự án.'},
+ {id:5,name:'Chương 2 – Tổng quan ngành tái chế phụ phẩm cà phê',cat:'analysis',start:'2026-09-19',end:'2026-09-22',owner:'Như Hiền, Nhật Minh',desc:'Nghiên cứu ngành, nguồn cung bã cà phê, nhu cầu và thị trường đầu ra.'},
+ {id:6,name:'Chương 3 – Phân tích kỹ thuật và công nghệ',cat:'analysis',start:'2026-09-19',end:'2026-09-22',owner:'Nga, Như Ngọc, Quế Anh',desc:'Phân tích địa điểm, công nghệ, thiết bị, quy trình, công suất, nguyên liệu và đầu ra.'},
+ {id:7,name:'Chương 4 – Sản phẩm, giá, quảng cáo và phân phối',cat:'analysis',start:'2026-09-23',end:'2026-09-26',owner:'Quế Anh, Như Hiền',desc:'Hoàn thiện danh mục sản phẩm, định giá, quảng cáo, truyền thông, nguồn cung và kênh phân phối.'},
+ {id:8,name:'Chương 5 – Đánh giá tác động môi trường',cat:'analysis',start:'2026-09-23',end:'2026-09-26',owner:'Nga, Nhật Minh',desc:'Đánh giá tác động môi trường, dòng chất thải và biện pháp quản lý, giảm thiểu.'},
+ {id:9,name:'Chương 6 – Nhân sự, tuyển dụng và đào tạo',cat:'easy',start:'2026-09-23',end:'2026-09-26',owner:'Như Ngọc',desc:'Trình bày cơ cấu nhân sự, nhu cầu lao động, tuyển dụng và kế hoạch đào tạo.'},
+ {id:10,name:'Chương 7 – Lập thông số và mô hình tài chính Excel',cat:'finance',start:'2026-09-26',end:'2026-10-11',owner:'Nhật Minh, Như Ngọc, Nga',desc:'Xây dựng thông số đầu vào, vốn đầu tư, doanh thu, chi phí, khấu hao, dòng tiền và chỉ tiêu hiệu quả; kiểm tra công thức và tính nhất quán.'},
+ {id:11,name:'Chương 8 – Hiệu quả kinh tế, xã hội và môi trường',cat:'analysis',start:'2026-10-11',end:'2026-10-14',owner:'Cả nhóm',desc:'Sử dụng kết quả mô hình tài chính để đánh giá hiệu quả kinh tế, xã hội và môi trường.'},
+ {id:12,name:'Chương 9 – Đánh giá kịch bản rủi ro dự án',cat:'analysis',start:'2026-10-11',end:'2026-10-14',owner:'Cả nhóm',desc:'Xác định rủi ro, xây dựng kịch bản và xem xét ảnh hưởng của thay đổi các giả định chính.'},
+ {id:13,name:'Chương 10 – Kết luận và kiến nghị',cat:'easy',start:'2026-10-11',end:'2026-10-14',owner:'Cả nhóm',desc:'Tổng hợp kết quả, kết luận và đưa ra kiến nghị cho dự án.'},
+ {id:14,name:'Thiết kế website sản phẩm',cat:'digital',start:'2026-09-26',end:'2026-10-11',owner:'Như Hiền',desc:'Thiết kế website giới thiệu sản phẩm của dự án RECOFFE.'},
+ {id:15,name:'Thiết kế PowerPoint thuyết trình và video',cat:'digital',start:'2026-10-15',end:'2026-10-19',owner:'Cả nhóm',desc:'Chọn nội dung trọng tâm, thiết kế slide thuyết trình và hoàn thiện video trình bày dự án.'},
+ {id:16,name:'Ghép và định dạng báo cáo Word',cat:'final',start:'2026-10-15',end:'2026-10-19',owner:'Cả nhóm',desc:'Ghép các chương, đồng bộ mục lục, bảng biểu, hình ảnh, tài liệu tham khảo và định dạng báo cáo.'},
+ {id:17,name:'Xây dựng phần Python',cat:'digital',start:'2026-10-15',end:'2026-10-19',owner:'Cả nhóm',desc:'Thực hiện phần Python phục vụ yêu cầu bài tập; lịch 15–19/10 là mốc đề xuất do chưa có ngày cụ thể.'},
+ {id:18,name:'Thiết kế infographic dự án',cat:'digital',start:'2026-10-17',end:'2026-10-18',owner:'Cả nhóm',desc:'Tổng hợp các thông tin quan trọng của RECOFFE thành infographic dễ đọc; lịch 17–18/10 là mốc đề xuất.'},
+ {id:19,name:'Rà soát cuối và hoàn thành toàn bộ bài nộp',cat:'final',start:'2026-10-20',end:'2026-10-24',owner:'Cả nhóm',desc:'Rà soát nội dung, số liệu, định dạng và các tệp Word, Excel, website, PowerPoint/video, Python và infographic trước hạn cuối 24/10/2026.'}
+];
+const labels={plan:'Lập kế hoạch',easy:'Viết nội dung',analysis:'Phân tích chuyên sâu',finance:'Excel & tài chính',digital:'Sản phẩm số',final:'Hoàn thiện'};
+const colors={plan:'#788a7a',easy:'#658c9b',analysis:'#285943',finance:'#8b83a8',digital:'#b97863',final:'#b88a3b'};
+const startDate = new Date('2026-09-08T00:00:00');
+const endDate = new Date('2026-10-24T00:00:00');
+const totalDays = Math.round((endDate-startDate)/86400000)+1;
+const dayNames=['CN','T2','T3','T4','T5','T6','T7'];
+function dayIndex(iso){return Math.round((new Date(iso+'T00:00:00')-startDate)/86400000);}
+function dateLabel(iso){return new Date(iso+'T00:00:00').toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'});}
+let selected=null;
+const gantt=document.getElementById('gantt');
+function render(){
+ const filter=document.getElementById('filter').value;
+ const query=document.getElementById('search').value.trim().toLowerCase();
+ const filtered=tasks.filter(t=>(filter==='all'||t.cat===filter)&&(!query||(t.name+' '+t.owner+' '+t.desc).toLowerCase().includes(query)));
+ let header='<div class="head"><div class="lefthead">Đầu việc / người phụ trách</div><div class="timeline">';
+ for(let i=0;i<totalDays;i++){
+   const d=new Date(startDate.getTime()+i*86400000);
+   const mondayStart=d.getDay()===1 || i===0;
+   const day=d.getDate();
+   const isMilestone=day===1 || i===0 || i===totalDays-1;
+   header+=`<div class="dayhead ${mondayStart?'weekstart':''}" title="${d.toLocaleDateString('vi-VN')}"><span class="dow">${dayNames[d.getDay()]}</span>${isMilestone?String(day).padStart(2,'0'):day}</div>`;
+ }
+ header+='</div></div>';
+ let html=header;let previousCategory='';
+ for(const task of filtered){
+   if(task.cat!==previousCategory){html+=`<div class="taskrow group"><div class="taskcell"><div class="num">↳</div><div class="taskname"><strong>${labels[task.cat]}</strong></div></div><div class="track"></div></div>`;previousCategory=task.cat;}
+   const s=dayIndex(task.start),e=dayIndex(task.end);
+   const duration=e-s+1;
+   html+=`<div class="taskrow"><div class="taskcell"><div class="num">${String(task.id).padStart(2,'0')}</div><div class="taskname"><strong>${task.name}</strong><small>${task.owner} · ${new Date(task.start+'T00:00:00').toLocaleDateString('vi-VN')}–${new Date(task.end+'T00:00:00').toLocaleDateString('vi-VN')}</small></div></div><div class="track"><div class="bar c-${task.cat}" data-id="${task.id}" role="button" tabindex="0" aria-label="${task.name}" style="grid-column:${s+1}/${e+2}" title="${task.name}: ${new Date(task.start+'T00:00:00').toLocaleDateString('vi-VN')}–${new Date(task.end+'T00:00:00').toLocaleDateString('vi-VN')}"><span>${task.name}</span></div></div></div>`;
+ }
+ if(!filtered.length)html+='<div style="padding:25px;text-align:center;color:var(--muted)">Không tìm thấy công việc.</div>';
+ gantt.innerHTML=html;
+ gantt.querySelectorAll('.bar').forEach(bar=>{bar.onclick=()=>openTask(+bar.dataset.id);bar.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTask(+bar.dataset.id);}};});
+}
+function openTask(id){selected=tasks.find(t=>t.id===id);document.getElementById('dlgTitle').textContent=selected.name;document.getElementById('dlgMeta').textContent=new Date(selected.start+'T00:00:00').toLocaleDateString('vi-VN')+'–'+new Date(selected.end+'T00:00:00').toLocaleDateString('vi-VN')+' · '+labels[selected.cat]+' · '+selected.owner;document.getElementById('dlgDesc').textContent=selected.desc;document.getElementById('status').value=selected.status||'Chưa bắt đầu';document.getElementById('notes').value=selected.notes||'';document.getElementById('modal').classList.add('open');}
+function close(){document.getElementById('modal').classList.remove('open');}
+document.getElementById('close').onclick=close;document.getElementById('cancel').onclick=close;document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')close();};
+document.getElementById('save').onclick=()=>{if(selected){selected.status=document.getElementById('status').value;selected.notes=document.getElementById('notes').value;close();}};
+document.getElementById('filter').onchange=render;document.getElementById('search').oninput=render;
+document.getElementById('reset').onclick=()=>{document.getElementById('filter').value='all';document.getElementById('search').value='';render();};
+document.getElementById('print').onclick=()=>window.print();document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+render();
+</script>
+
+<!--sites-preview-theme:start-->
+<style data-sites-preview-theme>:root{--site-primary:#285943 !important;--site-on-primary:#ffffff !important}</style>
+<script type="application/json" data-sites-preview-theme>{"appearance":"custom","primary":"#285943","secondary":null,"background":"#f5f6f2","typography":"original","spacing":1,"roundness":1,"headingScale":1,"decorationOpacity":1}</script>
+<!--sites-preview-theme:end-->
+</body>
+</html>
